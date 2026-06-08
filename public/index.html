@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Whitelist Panel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial; background: #111; color: #fff; display: flex; justify-content: center; padding: 50px 20px; }
+    .panel { background: #1e1e1e; border-radius: 12px; padding: 30px; width: 100%; max-width: 450px; }
+    h2 { margin-bottom: 20px; color: #5865f2; }
+    input { width: 100%; padding: 10px; margin: 6px 0; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: #fff; }
+    .btns { display: flex; gap: 8px; margin-top: 10px; }
+    button { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .add { background: #5865f2; color: white; }
+    .rem { background: #ed4245; color: white; }
+    .lst { background: #333; color: white; }
+    #msg { margin-top: 12px; padding: 10px; border-radius: 6px; display: none; }
+    .ok { background: #2d7a2d; }
+    .err { background: #7a2d2d; }
+    #lista { margin-top: 15px; font-size: 13px; color: #aaa; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>🛡 Whitelist Panel</h2>
+    <input id="pass" type="password" placeholder="Hasło admina" />
+    <input id="nick" placeholder="Nick gracza (Roblox)" />
+    <div class="btns">
+      <button class="add" onclick="dodaj()">Dodaj</button>
+      <button class="rem" onclick="usun()">Usuń</button>
+      <button class="lst" onclick="lista()">Lista</button>
+    </div>
+    <div id="msg"></div>
+    <div id="lista"></div>
+  </div>
+
+  <script>
+    function showMsg(text, ok) {
+      const el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = ok ? 'ok' : 'err';
+      el.style.display = 'block';
+    }
+
+    async function dodaj() {
+      const res = await fetch('/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username: document.getElementById('nick').value, password: document.getElementById('pass').value })
+      });
+      const data = await res.json();
+      showMsg(data.success ? `✅ Dodano: ${data.username} (ID: ${data.id})` : '❌ ' + data.error, data.success);
+    }
+
+    async function usun() {
+      const res = await fetch('/remove', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username: document.getElementById('nick').value, password: document.getElementById('pass').value })
+      });
+      const data = await res.json();
+      showMsg(data.success ? '✅ Usunięto!' : '❌ ' + data.error, data.success);
+    }
+
+    async function lista() {
+      const pass = document.getElementById('pass').value;
+      const res = await fetch(`/list?password=${pass}`);
+      const data = await res.json();
+      if (data.error) { showMsg('❌ ' + data.error, false); return; }
+      document.getElementById('lista').textContent = `Lista (${data.length} graczy): ` + data.join(', ');
+    }
+  </script>
+</body>
+</html>
